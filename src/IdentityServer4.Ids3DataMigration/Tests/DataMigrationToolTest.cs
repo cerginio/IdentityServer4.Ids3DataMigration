@@ -10,9 +10,10 @@ namespace IdentityServer4.Ids3DataMigration.Tests
     [Trait("Category", "DAL")]
     public class DataMigrationToolTest
     {
-        private const string EnvironmentName = "alfa-to-local-scenario"; // local-to-local-scenario | alfa-to-beta-scenario
+        //private IConfigurationRoot Configuration => AppSettingsMockingBuilder.BuildConfiguration("alfa-to-local-scenario");
+        // alfa-to-local-scenario | local-to-local-scenario | alfa-to-beta-scenario
 
-        private IConfigurationRoot Configuration => AppSettingsMockingBuilder.BuildConfiguration(EnvironmentName);
+        private IConfigurationRoot Configuration => AppSettingsMockingBuilder.BuildConfiguration();
 
         [Fact]
         public void Ids3_DataMigrationTool_Must_Read_Client_Root()
@@ -22,7 +23,7 @@ namespace IdentityServer4.Ids3DataMigration.Tests
             var res = dataIds3Tool.GetIds3ClientsRoot();
 
             Assert.NotNull(res.Clients);
-            Assert.True(res.Clients.Length > 100);//~190
+            Assert.True(res.Clients.Length > 1);// put your number
         }
 
 
@@ -44,7 +45,7 @@ namespace IdentityServer4.Ids3DataMigration.Tests
             var tool = new DataMigrationTool(Configuration);
 
             //Act
-            var result = tool.ReadIdsAndMapClientTreetoIds4(true);
+            var result = tool.ReadIds3DbAndMapClientsScopesTreeToIds4Schema(true);
 
             // Assert
             // todo: ApiResourceClaims Scope !!
@@ -95,19 +96,20 @@ namespace IdentityServer4.Ids3DataMigration.Tests
             var enableScopeToApiResource2ndLevelMapping = true;// otherwise client could not claim api scopes in authorization request
 
             tool.CleanUpIds4Db();
-            //tool.SeedClientsDataToContextIfEmpty(clientsConfig);
+            // tool.SeedClientsDataToContextIfEmpty(clientsConfig);// - optional
 
             //Act
-            var result = tool.CopyClientTreeFromIds3to4(enableScopeToApiResource2ndLevelMapping);
+            var mappingResult = tool.CopyClientsScopesTreeFromIds3DbToIds4Db(enableScopeToApiResource2ndLevelMapping);
 
             // Assert  Clients
             var clientsDataCopiedFromIds3 = tool.Ids4Tool.GetIds4ClientsRoot();
 
-            // Assert Clients count
-            Assert.Equal(result.Item2.Clients.Length, clientsDataCopiedFromIds3.Clients.Length);
+            // Assert copied Clients to Ids4 database and mapping result - check if insertion to db passed properly
+            Assert.Equal(mappingResult.Item2.Clients.Length, clientsDataCopiedFromIds3.Clients.Length);
 
-            // Assert Clients by ClientId
-            foreach (var client in result.Item2.Clients)
+            // Assert some Clients details by ClientId
+            // AllowedGrantTypes mapping is not trivial - (see  Mapper profile 'Ids3ToIds4EntityProfile')
+            foreach (var client in mappingResult.Item2.Clients)
             {
                 var copiedClient = clientsDataCopiedFromIds3.Clients.FirstOrDefault(x => x.ClientId == client.ClientId);
                 Assert.NotNull(copiedClient);
@@ -116,7 +118,7 @@ namespace IdentityServer4.Ids3DataMigration.Tests
             }
 
             // Assert Scopes
-            Assert.Equal(result.Item1.Scopes.Length, clientsDataCopiedFromIds3.ApiResources.Length + clientsDataCopiedFromIds3.IdentityResources.Length);
+            Assert.Equal(mappingResult.Item1.Scopes.Length, clientsDataCopiedFromIds3.ApiResources.Length + clientsDataCopiedFromIds3.IdentityResources.Length);
 
             // Assert Scope Claims
             var apiScopes = clientsDataCopiedFromIds3.ApiResources
@@ -133,7 +135,7 @@ namespace IdentityServer4.Ids3DataMigration.Tests
 
             var claimsTotalSavedCount = (enableScopeToApiResource2ndLevelMapping ? apiScopeClaimsCount : apiResourceClaimsCount) + identityScopeClaimsCount;
 
-            var claimsInScopesExpected = result.Item1.Scopes.SelectMany(x => x.ScopeClaims).ToArray().Length;
+            var claimsInScopesExpected = mappingResult.Item1.Scopes.SelectMany(x => x.ScopeClaims).ToArray().Length;
 
             Assert.Equal(claimsInScopesExpected, claimsTotalSavedCount);
 

@@ -25,7 +25,7 @@ namespace IdentityServer4.DAL.Seed
             int res = 0;
             var commands = IdentityInsertCommands(state);
 
-            // one by one commands execution
+            // Option#1: one by one commands execution
             //for (var i = 0; i < commands.Length; i++)
             //{
             //    var c = commands[i];
@@ -34,7 +34,7 @@ namespace IdentityServer4.DAL.Seed
             //    Console.WriteLine($"{i}-[{upated}]: {c}");
             //}
 
-            // single connection
+            // Option#2: single connection
             var rawSqlString = new RawSqlString(string.Join(Environment.NewLine, commands));
             Console.WriteLine($"Switch Idnetity state started: {Environment.NewLine}{rawSqlString.Format}{Environment.NewLine}");
             res = context.Database.ExecuteSqlCommand(sql: rawSqlString);

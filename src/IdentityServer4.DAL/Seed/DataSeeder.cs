@@ -18,7 +18,7 @@ namespace IdentityServer4.DAL.Seed
 
             Console.WriteLine($"Db clean up started: {Environment.NewLine}");
 
-            // execute commands one by one
+            // Option#1: execute commands one by one
             for (var i = 0; i < commands.Length; i++)
             {
                 var c = commands[i];
@@ -27,7 +27,7 @@ namespace IdentityServer4.DAL.Seed
                 Console.WriteLine($"{i}-[{deleted}]: {c}");
             }
 
-            // single connection
+            // Option#2: single connection
             //var rawSqlString = new RawSqlString(string.Join(Environment.NewLine, commands));
             //Console.WriteLine($"Db clean up started: {Environment.NewLine}{rawSqlString.Format}{Environment.NewLine}");
             //res = context.Database.ExecuteSqlCommand(rawSqlString);

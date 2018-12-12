@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using AutoMapper;
 using IdentityServer3.Core.Models;
@@ -46,7 +47,8 @@ namespace IdentityServer4.Ids3DataMigration.Tools
             Assert.True(unmappedProperties.Count == expectedCount, unmappedProperties.GetMessage(typeof(T)));
         }
 
-        public (Ids3RootDTO, Ids4RootDTO) ReadIdsAndMapClientTreetoIds4(bool enableScopeToApiResource2ndLevelMapping)
+        /// Read and Map. Not saving changes to Db
+        public (Ids3RootDTO, Ids4RootDTO) ReadIds3DbAndMapClientsScopesTreeToIds4Schema(bool enableScopeToApiResource2ndLevelMapping)
         {
             var clients3Source = Ids3Tool.GetIds3ClientsRoot();
             var clients4Target = _mapper.Map<Ids4Entities.Client[]>(clients3Source.Clients);
@@ -59,11 +61,14 @@ namespace IdentityServer4.Ids3DataMigration.Tools
 
             var claims = apiResources4Target.SelectMany(x => x.UserClaims)
                 .Select(x => new
-            {
-                x.Type,
-                x.ApiResourceId,
-                ApiResourceName = x.ApiResource?.Name
-            }).ToArray(); ;
+                {
+                    x.Type,
+                    x.ApiResourceId,
+                    ApiResourceName = x.ApiResource?.Name
+                }).ToList();
+
+            claims.ForEach(x=>Debug.WriteLine($"{x.Type}: ({x.ApiResourceId}-{x.ApiResourceName})")); 
+
 
             var resourcesStorage = new ResourcesDataStorage(
                 identityResources4Target, apiResources4Target,
@@ -77,7 +82,6 @@ namespace IdentityServer4.Ids3DataMigration.Tools
 
             if (enableScopeToApiResource2ndLevelMapping)
             {
-
                 var apiScopes =
                     _mapper.Map<Ids4Entities.ApiScope[]>(
                         clients3Source.Scopes.Where(x => x.Type == (int)ScopeType.Resource));
@@ -107,7 +111,8 @@ namespace IdentityServer4.Ids3DataMigration.Tools
             });
         }
 
-        public (Ids3RootDTO, Ids4RootDTO) CopyClientTreeFromIds3to4(bool enableScopeToApiResource2ndLevelMapping)
+        /// Making Ids4 entities tree from Ids3 and Copy to Ids4 Database
+        public (Ids3RootDTO, Ids4RootDTO) CopyClientsScopesTreeFromIds3DbToIds4Db(bool enableScopeToApiResource2ndLevelMapping)
         {
             var existingTargetClients4 = Ids4Tool.GetIds4ClientsRoot();
             var existingClients4Ids = existingTargetClients4.Clients.Select(x => x.ClientId).ToList();
@@ -299,8 +304,6 @@ namespace IdentityServer4.Ids3DataMigration.Tools
             }
         }
 
-        // Copy from DataSeeder with ConfigurationDbContext => CustomConfigurationDbContext substitution.
-        // Reason: Common Interface is not available to add and use instead.
         public void SeedClientsDataToContextIfEmpty(IClientsConfigData clientsConfig)
         {
             // Damned hack for ConfigurationDbContextFactory!

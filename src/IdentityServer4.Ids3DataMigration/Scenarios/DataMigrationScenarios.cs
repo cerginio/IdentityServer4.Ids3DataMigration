@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using IdentityServer4.DAL.Seed.Development;
+using IdentityServer4.DAL.Setup;
 using IdentityServer4.Ids3DataMigration.Tools;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -10,16 +11,21 @@ namespace IdentityServer4.Ids3DataMigration.Scenarios
     [Trait("Category", "DAL")]
     public class DataMigrationScenarios
     {
-        private const string EnvironmentName = "Alfa-to-Beta-scenario";
+        //private const string ScenarioName = "Alfa-to-Beta-scenario";
 
-        private static readonly IConfigurationRoot Configuration =
-            new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", true, true)
-            .AddJsonFile($"appsettings.{EnvironmentName}.json", true, true)
-        .Build();
+        //private static readonly IConfigurationRoot Configuration =
+        //    new ConfigurationBuilder()
+        //    .AddJsonFile("appsettings.json", true, true)
+        //    .AddJsonFile($"appsettings.{ScenarioName}.json", true, true)
+        //.Build();
+
+        //private IConfigurationRoot Configuration => AppSettingsMockingBuilder.BuildConfiguration("alfa-to-local-scenario");
+        // alfa-to-local-scenario | local-to-local-scenario | alfa-to-beta-scenario
+
+        private IConfigurationRoot Configuration => AppSettingsMockingBuilder.BuildConfiguration();
 
         [Fact]
-        public void MigrateIds3ClientsToRestoredDatabase()
+        public void MigrateIds3ClientsToRestoredIds4Database()
         {
             // Arrange
             var tool = new DataMigrationTool(Configuration);
@@ -30,7 +36,7 @@ namespace IdentityServer4.Ids3DataMigration.Scenarios
             //tool.SeedClientsDataToContextIfEmpty(clientsConfig);
 
             //Act
-            var result = tool.CopyClientTreeFromIds3to4(enableScopeToApiResource2ndLevelMapping);
+            var result = tool.CopyClientsScopesTreeFromIds3DbToIds4Db(enableScopeToApiResource2ndLevelMapping);
 
             // Assert  Clients
             var clientsDataCopiedFromIds3 = tool.Ids4Tool.GetIds4ClientsRoot();
