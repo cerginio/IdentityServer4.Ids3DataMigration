@@ -91,6 +91,8 @@ namespace IdentityServer4.Ids3DataMigration.CustomDal
         /// Client
         public DbSet<ClientClaim> ClientClaims { get; set; }
         public DbSet<ClientRedirectUri> ClientRedirectUris { get; set; }
+        public DbSet<ClientPostLogoutRedirectUri> ClientPostLogoutRedirectUris { get; set; }
+
         public DbSet<ClientCorsOrigin> ClientCorsOrigins { get; set; }
         public DbSet<ClientScope> ClientScopes { get; set; }
         public DbSet<ClientSecret> ClientSecrets { get; internal set; }

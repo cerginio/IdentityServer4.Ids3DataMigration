@@ -234,6 +234,11 @@ namespace IdentityServer4.Ids3DataMigration.Tools
             ctx.ClientRedirectUris.AddRange(storage.RedirectUris);
             SaveWithIdentityColumn(ctx, nameof(ctx.ClientRedirectUris));
 
+            // PostLogoutRedirectUris
+            ctx.ClientPostLogoutRedirectUris.AddRange(storage.PostLogoutRedirectUris);
+            SaveWithIdentityColumn(ctx, nameof(ctx.ClientPostLogoutRedirectUris));
+
+
             // ClientCorsOrigins
             ctx.ClientCorsOrigins.AddRange(storage.AllowedCorsOrigins);
             SaveWithIdentityColumn(ctx, nameof(ctx.ClientCorsOrigins));
